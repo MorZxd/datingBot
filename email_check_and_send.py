@@ -12,7 +12,7 @@ def my_valid_email(email):
     return True
 
 def send_verification_email(user_email, verification_code, user_id):
-    sender_email = "noreplysparkle@rambler.ru"
+    sender_email = "noreplytwinkl@rambler.ru"
     sender_password = "p4r0lch1kS"
     
     smtp_server = "smtp.rambler.ru"
