@@ -180,10 +180,10 @@ but_referals = types.KeyboardButton('🔗Реферальная ссылка')
 markup_referals.add(but_referals, "🏆Мои награды", "🔢Количество рефералов", but_back)
 
 #define bot
-bot = telebot.TeleBot('7686184399:AAE05Ll7kwOtIP9SmbNwhiSL4jh0zD-UB9E')
+bot = telebot.TeleBot('')
 
 #define token for pay
-TELEGRAM_PROVIDER_TOKEN = "390540012:LIVE:60900"
+TELEGRAM_PROVIDER_TOKEN = ""
 
 ADMIN_CHAT_ID = 6670128924 #Катя доп аккаунт
 
