@@ -13,7 +13,7 @@ def my_valid_email(email):
 
 def send_verification_email(user_email, verification_code, user_id):
     sender_email = "noreplytwinkl@rambler.ru"
-    sender_password = "p4r0lch1kS"
+    sender_password = ""
     
     smtp_server = "smtp.rambler.ru"
     smtp_port = 587  # для TLS
