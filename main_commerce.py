@@ -180,12 +180,12 @@ but_referals = types.KeyboardButton('🔗Реферальная ссылка')
 markup_referals.add(but_referals, "🏆Мои награды", "🔢Количество рефералов", but_back)
 
 #define bot
-bot = telebot.TeleBot('')
+bot = telebot.TeleBot('API KEY')
 
 #define token for pay
-TELEGRAM_PROVIDER_TOKEN = ""
+TELEGRAM_PROVIDER_TOKEN = "PAY TOKEN"
 
-ADMIN_CHAT_ID = 6670128924 #Катя доп аккаунт
+ADMIN_CHAT_ID = 'ID' #Катя доп аккаунт
 
 #временные словари для разных функций
 user_states = {} #в основном используется для заполнения анкеты. user_states[user_id] = 'wait bio' => следующее сообщение, которое отправит пользоавтель, будет описанием его анкеты
@@ -273,7 +273,7 @@ def get_name(message, is_edit):
         WHERE user_id = ?
     ''', (name, message.from_user.id))
     if is_edit:
-        bot.send_message(message.chat.id, "Ваше имя успешно изменено!")
+        bot.send_message(message.chat.id, "Ваше имя успешно изменено!", reply_markup = start_menu)
     else:
         bot.send_message(message.chat.id, f'Приятно познакомиться! {name}, ты Парень или Девушка?',reply_markup = genders)
         bot.register_next_step_handler(message, get_gender, is_edit = False)
@@ -306,9 +306,9 @@ def get_gender(message, is_edit):
                     WHERE user_id = ?
                 ''', (gender,user_id))
         if is_edit:
-            bot.send_message(chat_id, f'Ваш пол успешно изменен!')
+            bot.send_message(chat_id, f'Ваш пол успешно изменен!', reply_markup = start_menu)
         else:
-            bot.send_message(chat_id, f'Отлично! Теперь выбери, люди какого пола тебе интересны\nДевушки/Парни/Не важно',reply_markup = looking_for_menu)
+            bot.send_message(chat_id, f'Отлично! Теперь выбери, люди какого пола тебе интересны\n\n<i>Выберите: Девушки/Парни/Не важно</i>',reply_markup = looking_for_menu, parse_mode='HTML')
             bot.register_next_step_handler(message, get_prefs, is_edit)
     else:
         bot.send_message(chat_id, 'Напишите: Парень вы или Девушка',reply_markup = genders)
@@ -333,7 +333,7 @@ def get_prefs(message, is_edit):
             elif prefers == "не важно":
                 conn.execute('UPDATE user_profiles SET preferences = 3 WHERE user_id = ?', (user_id,))
         if is_edit:
-            bot.send_message(chat_id, f'Ваши предпочтения успешно изменены!')
+            bot.send_message(chat_id, f'Ваши предпочтения успешно изменены!', reply_markup = start_menu)
         else:
             bot.send_message(chat_id, f'Теперь расскажи немного о себе',reply_markup = types.ReplyKeyboardRemove())
             bot.register_next_step_handler(message, get_bio, is_edit)
@@ -358,7 +358,7 @@ def get_bio(message, is_edit):
             WHERE user_id = ?
         ''', (bio,user_id))
         if is_edit:
-            bot.send_message(f'Ваше описание успешно изменено!')
+            bot.send_message(chat_id, f'Ваше описание успешно изменено!', reply_markup=start_menu)
         else:
             bot.send_message(chat_id, f'Отлично! Введи свой возраст')
             bot.register_next_step_handler(message, get_age, is_edit)
@@ -383,9 +383,9 @@ def get_age(message, is_edit):
             WHERE user_id = ?
             ''', (age,user_id))
         if is_edit:
-            bot.send_message(f'Ваш возраст успешно изменен!')
+            bot.send_message(chat_id, f'Ваш возраст успешно изменен!', reply_markup=start_menu)
         else:
-            bot.send_message(chat_id, f'Теперь напишите, в каком диапазоне возраста вы ищите людей\nНапишите 2 числа через пробел: минимальный и максимальный возраст соответсвенно\n\nПример: 20 30\nОзначает, что вы ищите людей возрастом от 20 до 30 лет включительно')
+            bot.send_message(chat_id, f'Теперь напишите, в каком диапазоне возраста вы ищите людей\nНапишите 2 числа через пробел: минимальный и максимальный возраст соответсвенно\n\n<i>Пример: 20 30\nОзначает, что вы ищите людей возрастом от 20 до 30 лет включительно</i>',parse_mode="HTML")
             bot.register_next_step_handler(message, get_pref_age, is_edit)
     else:
         bot.send_message(chat_id, 'Введите одно число - ваш настоящий возраст')
@@ -421,20 +421,31 @@ def get_pref_age(message, is_edit):
             WHERE user_id = ?
             ''', (age1,age2, user_id))
         if is_edit:
-            bot.send_message(f'Ваши предпочтения успешно изменены!')
+            bot.send_message(chat_id, f'Ваши предпочтения успешно изменены!', reply_markup= start_menu)
         else:
-            bot.send_message(chat_id, f'Хорошо, теперь введите название города/населенного пункта, в котором вы ищите знакомства\nПримечание: Лучше писать название города на русском языке, в поиске Москва ≠ Moscow')
+            bot.send_message(chat_id, f'Хорошо, теперь введите название города/населенного пункта, в котором вы ищите знакомства\n\n<i>Примечание: В случае с малоизвестным городом программа может неправильно определеять его точное название. Если не уверены -- проверьте город после заполнения анкеты. Анкету всегда можно изменить в настройках</i>', parse_mode='HTML')
             bot.register_next_step_handler(message, get_city, is_edit)
     else:
         bot.send_message(chat_id, f'Введите 2 числа через пробел')
         bot.register_next_step_handler(message, get_pref_age, is_edit)
+
+def normalize_city_to_russian(city_name):
+    geolocator2 = Nominatim(user_agent="city_normalizer")
+    location = geolocator2.geocode(city_name, language="ru")  # Приведение к русскому языку
+    if location:
+        city = location.address.split(",")[0]  # Берем только первую часть названия
+        # Удаляем префиксы вроде "городской округ"
+        if city.startswith("городской округ "):
+            city = city.replace("городской округ ", "", 1)
+        return city.strip()
+    return None
 
 def get_city(message, is_edit):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if message.content_type == 'text':
         text = message.text
-        loc = geolocator.geocode(text)
+        loc = normalize_city_to_russian(text)
         if loc:
             text = text.title()
             with conn:
@@ -442,9 +453,9 @@ def get_city(message, is_edit):
                 UPDATE user_profiles
                 SET city = ?
                 WHERE user_id = ?
-            ''', (text, user_id))
+            ''', (loc, user_id))
             if is_edit:
-                bot.send_message(f'Город успешно изменен!')
+                bot.send_message(chat_id, f'Город успешно изменен!', reply_markup=start_menu)
             else:
                 bot.send_message(chat_id, f'Отлично! Осталось прикрепить фото')
                 bot.register_next_step_handler(message, get_photo, is_edit)
@@ -470,10 +481,22 @@ def get_photo(message, is_edit):
             SET photo = ?
             WHERE user_id = ?
         ''', (downloaded_file,user_id))
+        with conn:
+            conn.execute('''
+                DELETE FROM evaluations
+                WHERE evaluator_id = ? OR evaluated_id = ?
+            ''', (user_id, user_id))
+            conn.commit()
         if is_edit:
             bot.reply_to(message, "Новое фото успешно загружено!",reply_markup = start_menu)
         else:
             bot.reply_to(message, "Фото успешно загружено, ваша анкета готова!",reply_markup = start_menu)
+            with conn:
+                conn.execute('''
+                    DELETE FROM evaluations
+                    WHERE evaluator_id = ? OR evaluated_id = ?
+                ''', (user_id, user_id))
+                conn.commit()
     else:
         bot.send_message(chat_id, 'Отправьте ваше Фото',reply_markup = types.ReplyKeyboardRemove())
         bot.register_next_step_handler(message, get_photo, is_edit)
@@ -577,6 +600,79 @@ def find_matc(user_id, chat_id):
             bot.send_message(chat_id, "Все анкеты уже просмотрены\nПриглашай друзей, чем больше людей в боте, тем интереснее им пользоваться!",reply_markup=dating_menu)
     else:
         bot.send_message(chat_id, f'У вас еще нет анкеты, или она заполнена не до конца.\nИспользуйте команду /create_profile , чтобы создать или обновить анкету.')
+
+#есть много разветвлений, когда человек ставит лайк. вынесем в отдельную функцию
+def give_like(chat_id, user_id, match_id, evaluator_username, from_girl_to_man = False, with_message = False, message = ""):
+    with conn:
+        evaluator_profile = conn.execute('''
+            SELECT name, photo, bio, age, amount_of_wins, amount_of_pars, city FROM user_profiles WHERE user_id = ?
+        ''', (user_id,)).fetchone()
+    if evaluator_profile:
+        evaluator_name, evaluator_photo, evaluator_bio, ev_age, ev_wins, ev_pars, ev_city = evaluator_profile
+        match_user_id = match_id
+        if match_user_id in user_states and user_states[match_user_id] == 'banned':
+            bot.send_message(user_id, 'К сожалению, данный пользователь был забанен.')
+        else:
+            vzaim = types.InlineKeyboardMarkup()
+            but_vzaim = types.InlineKeyboardButton(f'👍', callback_data=f'vzaim {user_id} {evaluator_username}')
+            but_dontlike = types.InlineKeyboardButton(f'👎', callback_data=f'nevzaim {user_id}')
+            vzaim.add(but_vzaim, but_dontlike)
+            if (evaluator_username != None):
+                if from_girl_to_man:
+                    evaluator_text = f"Ваша анкета понравилась пользователю ???||\(если вы взаимно лайкните — вам покажется юзернейм\)||\nЕго анкета:\n\n"
+                    if with_message:
+                        evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} \- {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов\n\nЛичное сообщение💌: {message}"
+                        bot.send_message(chat_id, 'Сообщение успешно отправлено!',reply_markup=dating_menu)
+                    else:
+                        evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} \- {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов"
+                    bot.send_photo(match_user_id, evaluator_photo, caption=evaluator_text, reply_markup=vzaim, parse_mode="MarkdownV2")
+                else:
+                    evaluator_text = f"Ваша анкета понравилась пользователю @{evaluator_username}!\nЕго анкета:\n\n"
+                    if with_message:
+                        evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} - {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов\n\nЛичное сообщение💌: {message}"
+                        
+                    else:
+                        evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} - {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов"
+                    bot.send_photo(match_user_id, evaluator_photo, caption=evaluator_text, reply_markup=vzaim)
+            else:
+                evaluator_text = f"Ваша анкета понравилась пользователю {evaluator_name}!\nЕго анкета:\n\n"
+                evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} - {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов"
+                bot.send_photo(match_user_id, evaluator_photo, caption=evaluator_text, reply_markup=vzaim)
+    find_matc(user_id,chat_id)
+
+def give_vzaim(user_id, match_id, evaluator_username):
+    with conn:
+        evaluator_profile = conn.execute('''
+        SELECT name, photo, bio, age, amount_of_wins, amount_of_pars, city FROM user_profiles WHERE user_id = ?
+        ''', (user_id,)).fetchone()
+    if evaluator_profile:
+        evaluator_name, evaluator_photo, evaluator_bio, ev_age, ev_wins, ev_pars, ev_city = evaluator_profile
+        with conn:
+            result = conn.execute('SELECT user_id FROM user_profiles WHERE user_id = ?', (match_id,)).fetchone()
+        if result:
+            match_user_id = result
+            if match_user_id in user_states and user_states[match_user_id] == 'banned':
+                bot.send_message(user_id, 'К сожалению, данный пользователь был забанен.')
+            else:
+                if evaluator_username != None:
+                    evaluator_text = f"Ура! Взаимный лайк с @{evaluator_username}!\n\nЕго анкета:\n\n"
+                else:
+                    evaluator_text = f"Ура! Взаимный лайк с @{evaluator_name}!\n\nЕго анкета:\n\n"
+                evaluator_text += f"{evaluator_name}, {ev_age}, {ev_city} - {evaluator_bio}\n\n{ev_wins} побед из {ev_pars} Баттлов"
+                bot.send_photo(match_user_id, evaluator_photo, caption=evaluator_text)
+                with conn:
+                    conn.execute('''
+                        INSERT INTO evaluations (evaluator_id, evaluated_id) VALUES (?, ?)
+                    ''', (user_id, match_id))
+                    conn.commit()
+                with conn:
+                    conn.execute('''
+                        INSERT INTO evaluations (evaluator_id, evaluated_id) VALUES (?, ?)
+                    ''', (match_id, user_id))
+                    conn.commit()
+                # bot.send_message(user_id, f'Отправили взаимный лайк!', reply_markup=start_menu)
+    
+
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 #ФУНКЦИИ ДЛЯ ФОТО-БАТТЛОВ
@@ -829,3 +925,608 @@ def clean_up_votes(battle_id):
             WHERE battle_id = ?
         ''', (battle_id,))
         conn.commit()
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+#ФУНКЦИИ ДЛЯ ПЛАТЕЖЕЙ И ПОПОЛНЕНИЯ БАЛАНСА
+#------------------------------------------------------------------------------------------------------------------------------------------
+
+import json
+import telebot
+from telebot import types
+
+# Функция для обновления баланса в базе данных
+def update_balance(user_id, amount):
+    # print(user_id, amount)
+    with conn:
+        conn.execute('UPDATE user_profiles SET balance = balance + ? WHERE  user_id = ?',(amount, user_id,))
+    pass
+
+#по комманде pay предлагаем пользователю создать платеж 
+@bot.message_handler(commands=['pay'])
+def request_payment(message):
+    if is_profile_verified(message.from_user.id):
+        markup = types.InlineKeyboardMarkup()
+        markup.row_width = 2
+        markup.add(
+            types.InlineKeyboardButton("100 рублей", callback_data="pay_100"),
+            types.InlineKeyboardButton("500 рублей", callback_data="pay_500"),
+            types.InlineKeyboardButton("1000 рублей", callback_data="pay_1000"),
+            types.InlineKeyboardButton("5000 рублей", callback_data="pay_5000"),
+            types.InlineKeyboardButton("20000 рублей", callback_data="pay_20000")
+        )
+        bot.send_message(message.chat.id, "Выберите сумму для пополнения:", reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Сначала нужно подтвердить аккаунт! Чтобы это сделать, пропиши команду /verify')
+    
+
+#обрабатываем нажатие на кнопку (сколько пользователь хочет заплатить), создаем и отправляем платеж
+@bot.callback_query_handler(func=lambda call: call.data.startswith('pay_'))
+def handle_payment_choice(call):
+    if call.from_user.id not in payloads_ids:
+        amount = int(call.data.split('_')[1])
+        invoice_payload = f"payment_{call.message.chat.id}_{amount}"
+        prices = [types.LabeledPrice("Пополнение баланса", amount * 100)]
+        provider_data = {
+            "receipt": {
+                "items": [
+                    {
+                        "description": "Пополнение баланса",
+                        "quantity": "1.00",
+                        "amount": {
+                            "value": str(amount),
+                            "currency": "RUB"
+                        },
+                        "vat_code": "1"
+                    }
+                ]
+            }
+        }
+        invoice_message = bot.send_invoice(
+            chat_id=call.message.chat.id,
+            title="Пополнение баланса",
+            description=f"Пополнение на {amount} рублей",
+            invoice_payload=invoice_payload,
+            provider_token=TELEGRAM_PROVIDER_TOKEN,
+            currency="RUB",
+            prices=prices,
+            need_email=True,
+            send_email_to_provider=True,
+            provider_data=json.dumps(provider_data)  # Передача данных для фискализации
+        )
+        payloads_ids[call.from_user.id] = invoice_message.message_id
+    else:
+        markup_close = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        but_close = types.KeyboardButton("Закрыть")
+        but_dont_close = types.KeyboardButton("Я оплачу открытый счет")
+        markup_close.add(but_close, but_dont_close)
+        bot.send_message(call.message.chat.id, f'Вы не можете создавать новые счета, пока не оплатите/закроете старые\nЧтобы закрыть неоплаченные счета - напишите одно сообщение "Закрыть"', reply_markup = markup_close)
+
+@bot.pre_checkout_query_handler(lambda query: True)
+def pre_checkout_query(pre_checkout_q: types.PreCheckoutQuery):
+    # Извлекаем invoice_payload из запроса
+    invoice_payload = pre_checkout_q.invoice_payload
+
+    # Проверяем, есть ли пользователь в словаре payload_ids
+    user_id = pre_checkout_q.from_user.id
+    if user_id in payloads_ids:
+        expected_payload = payloads_ids[user_id]
+
+        # Разбираем payload, чтобы извлечь amount
+        payload_parts = invoice_payload.split('_')
+        if len(payload_parts) == 3 and payload_parts[0] == 'payment':
+            bot.answer_pre_checkout_query(pre_checkout_q.id, ok=True)
+            return
+        else:
+            bot.answer_pre_checkout_query(pre_checkout_q.id, ok=False, error_message="Ошибка: неверный формат payload. Обратитесь в поддержку")
+            return
+    else:
+        bot.answer_pre_checkout_query(pre_checkout_q.id, ok=False, error_message="Ошибка: не найден соответствующий счет. Обратитесь в поддержку")
+
+#когда пользователь оптатил какой-то счет, смотрим, на какую сумму этот счет был и пополняем его баланс 
+@bot.message_handler(content_types=['successful_payment'])
+def successful_payment(message):
+    # Проверяем уникальный payload
+    invoice_payload = message.successful_payment.invoice_payload
+    payload_parts = invoice_payload.split('_')
+    try:
+        to_delete = payloads_ids[message.from_user.id]
+    except KeyError:
+        amount = int(payload_parts[2])
+        update_balance(message.from_user.id, amount)
+        bot.send_message(message.chat.id, f'Видимо, вы хотели пополнить чужой счет, но это так не работает\nТакие транзакции отследить сложнее, но возможно. Ваш баланс пополнен на {amount} рублей')
+    if len(payload_parts) == 3 and payload_parts[0] == 'payment':
+        amount = int(payload_parts[2])
+        update_balance(message.from_user.id, amount)
+        bot.delete_message(message.chat.id, to_delete)
+        payloads_ids.pop(message.from_user.id, None)
+        bot.send_message(message.chat.id,f"Оплата прошла успешно! Баланс пополнен на {amount} рублей",reply_markup=start_menu)
+    else:
+        bot.send_message(message.chat.id, "Ошибка: неверный инвойс.")
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+#ФУНКЦИОНАЛ БОТА. IF MESSAGE.TEXT == X DO FUNC(1) ELSE DO FUNC(2)
+#------------------------------------------------------------------------------------------------------------------------------------------
+#отсюда начинается обработка разных команд/текста/нажатий кнопок ботом. Примерно все имеет вид if текст == x вызови функцию func1, иначе функцию func2.
+
+
+#команда start
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    referrer_id = message.text.split()[1] if len(message.text.split()) > 1 else None
+    user_id = message.from_user.id
+    if referrer_id and referrer_id.isdigit() and int(referrer_id) != user_id:
+        add_referral(referrer_id=int(referrer_id), referred_id=user_id)
+    elif referrer_id and referrer_id.isdigit() and int(referrer_id) == user_id:
+        bot.send_message(user_id, "Нельзя переходить по своей же реферальной ссылке!")
+    update_last_online(message)
+    chat_id = message.chat.id
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("Далее 👉",callback_data='next')
+    markup.add(btn)
+    bot.send_message(chat_id,f"Привет, {message.from_user.first_name}!\nДобро пожаловать в Twinkl - Сервис дорогих знакомств!\n\nЗнакомься по принципу <i>лайк с ценой - интерес с намерением</i>", reply_markup=markup, parse_mode='HTML')
+
+#вторая часть команды start
+@bot.callback_query_handler(func=lambda call: call.data == 'next')
+def send(call):
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton('Принимаю!👌', callback_data= 'ready')
+    markup.add(btn)
+    bot.send_message(call.message.chat.id, f'❕Чтобы зарегистрироваться в боте, нужно подтвердить свою электронную почту\nНесмотря на обязательную верификацию, помните, что интернет - опасная среда, где люди могут выдавать себя за других\n\nПродолжая, вы принимаете [пользовательское соглашение](https://docs.google.com/document/d/e/2PACX-1vTIQFG3VuFD4XnyP9GDER9gYJJVew4dwDXvzxgurOn376VKE3KAUSh6U9-pRUHMwX9aygCapkC5iDKu/pub) и [политику конфиденциальности](https://docs.google.com/document/d/e/2PACX-1vRm9ZbciP3xHc0QniRrb_EijvhYW3Lm_2BfyOdvGIjQ1rPrUvBXybhiMaCsE-ac2QJVr685N4XwQ-af/pub)', reply_markup=markup, parse_mode='Markdown')
+    
+#третья часть команды start
+@bot.callback_query_handler(func=lambda call: call.data == 'ready')
+def send2(call):
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+    bot.send_message(call.message.chat.id, 'Для начала тебе нужно подтвердить свою почту\nЧтобы это сделать, пропиши команду /verify\n\nПоддержка 24/7 - @sparkle_help')
+
+#команда verify - подтверждение по почте 
+@bot.message_handler(commands=['verify'])
+def verif(message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        if is_profile_verified(user_id):
+            bot.send_message(chat_id,'Ваш профиль уже подтвержден', reply_markup=start_menu)
+        else:
+            user_states[user_id] = 'wait email'
+            bot.send_message(chat_id,'Отправьте вашу почту')
+
+#команда create_profile - создать анкету
+@bot.message_handler(commands=['create_profile'])
+def make_profile(message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        if is_profile_verified(user_id):
+            with conn:
+                conn.execute('''
+                    DELETE FROM evaluations
+                    WHERE evaluator_id = ? OR evaluated_id = ?
+                ''', (user_id, user_id))
+                conn.commit()
+            with conn:
+                conn.execute('''
+                             DELETE FROM battle_queue WHERE user_id = ?
+                             ''', (user_id,))
+                conn.commit()
+            with conn:
+                result = conn.execute('SELECT user_id FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+            if result is None:
+                with conn:
+                    conn.execute('''
+                        INSERT INTO user_profiles (user_id) VALUES (?)
+                    ''', (user_id,))
+            bot.send_message(chat_id,'Мы рады, что вы решили создать анкету!\nДавайте начнем, как вас зовут?',reply_markup = types.ReplyKeyboardRemove())
+            bot.register_next_step_handler(message, get_name, is_edit = False)
+        else:
+            bot.send_message(chat_id, 'Сначала нужно подтвердить аккаунт! Чтобы это сделать, пропиши команду /verify')
+
+#обработка нажатия на инлайн кнопки во время голосования в баттле. голос за левого/правого, выход из баттлов. 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('vote_') or call.data == 'exit_battle')
+def handle_vote_or_exit(call):
+    chat_id = call.message.chat.id
+    user_id = call.from_user.id
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        if is_profile_verified(user_id):
+            bot.delete_message(chat_id, call.message.message_id)
+            if call.data == 'exit_battle':
+                bot.send_message(chat_id, "Вы вышли из баттлов.")
+                return
+            battle_id = int(call.data.split('_')[-1])
+            vote_side = call.data.split('_')[1]
+            with conn:
+                existing_vote = conn.execute('''
+                    SELECT vote_side FROM votes WHERE user_id = ? AND battle_id = ?
+                ''', (user_id, battle_id)).fetchone()
+                if existing_vote:
+                    bot.send_message(chat_id, "Вы уже голосовали в этом баттле.")
+                    return
+                conn.execute('''
+                    INSERT INTO votes (user_id, battle_id, vote_side) VALUES (?, ?, ?)
+                ''', (user_id, battle_id, vote_side))
+                if vote_side == 'left':
+                    conn.execute('UPDATE battles SET votes_participant_1 = votes_participant_1 + 1 WHERE battle_id = ?', (battle_id,))
+                else:
+                    conn.execute('UPDATE battles SET votes_participant_2 = votes_participant_2 + 1 WHERE battle_id = ?', (battle_id,))
+                conn.commit()
+            show_next_battle(chat_id,user_id)
+        else:
+            bot.send_message(chat_id, 'Сначала нужно подтвердить аккаунт! Чтобы это сделать, пропиши команду /verify')
+
+#обработка нажатий на inline клавиатуру под анкетой пользователя. ставим лайк/дизлайк/итд.
+@bot.callback_query_handler(func=lambda call: call.data.startswith(('like_', 'dislike_', 'exit', 'report', 'message')))
+def handle_evaluation(call):
+    chat_id = call.message.chat.id
+    user_id = call.from_user.id
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        if is_profile_verified(user_id):
+            bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+            with conn:
+                user_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+            user_gender = user_gender[0]
+                # user_gender = int(user_gender)
+            if call.data.startswith('like_'):
+                match_id = int(call.data.split('_')[1])
+                with conn:
+                    match_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (match_id,)).fetchone()
+                match_gender = match_gender[0]
+                    # match_gender = int(match_gender)
+                if user_gender == 1 and match_gender == 2:
+                    with conn: 
+                        balance = conn.execute('SELECT balance FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+                    balance = int(balance[0])
+                    if balance >= 50:
+                        bot.send_message(chat_id,f'Отправили лайк!\nБаланс: {balance - 50}', reply_markup=dating_menu)
+                        with conn:
+                            conn.execute('''UPDATE user_profiles SET balance = balance - 50 WHERE user_id = ?''', (user_id,))
+                        give_like(chat_id, user_id, match_id, call.from_user.username)
+                    else:
+                        bot.send_message(chat_id, "Стоп! Недостаточно средств на балансе!\n\nНаш сервис разработан так, чтобы каждый лайк был осознанным и значимым. Мы уверены, что серьезные отношения начинаются с ответственности и четкого выбора. Платные лайки помогают вам более внимательно подходить к выбору партнерш, создавая условия для того, чтобы каждый шаг был продуманным и целенаправленным.\n\nПополните баланс и продолжайте знакомиться с теми, кто действительно вам интересен!\n\nЦена одного лайка - 50 рублей, казалось бы - совсем немного, но готовы ли вы тратить 50 рублей на каждую анкету?...\n\n👉Пополнить баланс можно по команде /pay", reply_markup=start_menu)
+                        remove_match(user_id, match_id)
+                else:
+                    give_like(chat_id, user_id, match_id, call.from_user.username, (user_gender == 2 and match_gender == 1))
+            elif call.data.startswith('message_'):
+                match_id = int(call.data.split('_')[1])
+                user_states[user_id] = f'wait message {match_id}'
+                bot.send_message(user_id, "Напишите сообщение, которое хотели бы отправить пользователю вместе с лайком\n\nЕсли передумали отправлять сообщение - напишите в сообщение один символ - 0")
+            elif call.data.startswith('dislike_'):
+                # match_id = int(call.data.split('_')[1])
+                # Просто переходим к следующей анкете
+                find_matc(user_id,chat_id)
+            elif call.data.startswith('exit_'):
+                match_id = int(call.data.split('_')[1])
+                remove_match(user_id, match_id)
+                bot.send_message(chat_id, "Вы вышли из режима знакомств.",reply_markup=dating_menu)
+            elif call.data.startswith('report_'):
+                bot.send_message(user_id, f'Вы успешно отправили жалобу! Скоро мы ее рассмотрим.')
+                match_id = int(call.data.split('_')[1])
+                with conn:
+                    result = conn.execute('''
+                    SELECT name, photo, gender, bio, age 
+                    FROM user_profiles 
+                    WHERE user_id = ?
+                    ''', (match_id,)).fetchone()
+                name, photo, gender, bio, age = result
+                bot.send_photo(671084247,photo,caption= f'Жалоба на {match_id}. Его анкета:\n\n{name}, {age}\n\n{bio}\n\nЧтобы его забанить, напишите боту ban match_id')
+                bot.send_photo(7515729537,photo,caption= f'Жалоба на {match_id}. Его анкета:\n\n{name}, {age}\n\n{bio}\n\nЧтобы его забанить, напишите боту ban match_id')
+                find_matc(user_id, chat_id)
+        else:
+            bot.send_message(chat_id, 'Сначала нужно подтвердить аккаунт! Чтобы это сделать, пропиши команду /verify')
+
+#обработка нажатий на взаимный/невзаимный лайк (когда тебя лайкают - приходит уведомление с анкетой лайкнвушего и предложением дать обратную связь)
+@bot.callback_query_handler(func=lambda call: call.data.startswith(('vzaim', 'nevzaim')))
+def handle_evaluation(call):
+    chat_id = call.message.chat.id
+    user_id = call.from_user.id
+    match_id = int(call.data.split(' ')[1])
+    if call.data.startswith('vzaim'):
+        with conn:
+            user_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+        user_gender = user_gender[0]
+        with conn:
+            match_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (match_id,)).fetchone()
+        match_gender = match_gender[0]
+        if user_gender == 1 and match_gender == 2:
+            with conn: 
+                balance = conn.execute('SELECT balance FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+            balance = int(balance[0])
+            if balance >= 25:
+                bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+                with conn:
+                    conn.execute('''UPDATE user_profiles SET balance = balance - 25 WHERE user_id = ?''', (user_id,))
+                    username = (call.data.split(" ")[2])
+                bot.send_message(chat_id,f'Отправили взаимный лайк!\nЮзернейм девушки: @{username}\nБаланс: {balance - 25}', reply_markup=dating_menu)
+                give_vzaim(user_id, match_id, call.from_user.username)
+            else:
+                bot.send_message(chat_id, f'💬 Взаимный лайк — шаг навстречу!\n\nВзаимный лайк стоит в 2 раза дешевле обычного. Мы сделали это специально, чтобы вы могли ответить взаимностью тем, кто действительно вам интересен, а не просто отвечать взаимностью всем подряд. Это делает каждый взаимный лайк более значимым.\n\nВсего лишь 25 рублей, но готовы ли вы отдать их любой?...\n\n👉Пополнить баланс можно по команде /pay', reply_markup=start_menu)
+        else:
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+            bot.send_message(chat_id,f'Отправили взаимный лайк!', reply_markup=dating_menu)
+            give_vzaim(user_id, match_id, call.from_user.username)
+    else:
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        with conn:
+            conn.execute('''
+                INSERT INTO evaluations (evaluator_id, evaluated_id) VALUES (?, ?)
+            ''', (user_id, match_id))
+            conn.commit()
+        with conn:
+            conn.execute('''
+                INSERT INTO evaluations (evaluator_id, evaluated_id) VALUES (?, ?)
+            ''', (match_id, user_id))
+            conn.commit()
+
+@bot.callback_query_handler(func=lambda call: call.data in ["reward_like", "reward_cash", "invite_more"])
+def handle_reward_buttons(call):
+    user_id = call.from_user.id
+    cursor = conn.execute("SELECT referral_count FROM referral_rewards WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    referral_count = row[0] if row else 0
+
+    if call.data == "reward_like":
+        if referral_count >= 3:
+            # Начисляем бесплатный лайк и уменьшаем количество рефералов
+            conn.execute("UPDATE referral_rewards SET referral_count = referral_count - 3 WHERE user_id = ?", (user_id,))
+            update_balance(user_id, 50)  # 50 рублей = стоимость одного лайка
+            bot.send_message(user_id, "Вам начислен бесплатный лайк!")
+        else:
+            bot.send_message(user_id, "Недостаточно рефералов для этой награды.")
+    elif call.data == "reward_cash":
+        if referral_count >= 100:
+            # Уменьшаем количество рефералов и отправляем уведомление админу
+            conn.execute("UPDATE referral_rewards SET referral_count = referral_count - 100 WHERE user_id = ?", (user_id,))
+            bot.send_message(user_id, "Вы выбрали 300₽. Администратор скоро свяжется с вами.")
+            bot.send_message(ADMIN_CHAT_ID, f"Пользователь {user_id} запросил выплату 300₽.")
+        else:
+            bot.send_message(user_id, "Недостаточно рефералов для этой награды.")
+    elif call.data == "invite_more":
+        referral_link = f"https://t.me/{bot.get_me().username}?start={user_id}"
+        bot.send_message(user_id, f"Приглашайте друзей по этой ссылке: {referral_link}")
+                        
+#обработка всех фоток, которые пользователь присылает. фото нам нужно только тогда, когда пользователь заполняет анкету, у него появляется особый статус в этот момент. в других случаях игнорируем
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        bot.send_message(chat_id, f'Зачем вы отправили фото?',reply_markup=start_menu)
+            
+#обработка всевозможных текстовых сообщений боту
+@bot.message_handler(content_types=['text'])
+def answer(message):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    is_profile_verified(user_id)
+    update_last_online(message)
+    if get_status(user_id) == 'banned':
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+    else:
+        if user_id in user_states and user_states[user_id] == 'wait email':
+            email = message.text
+            if validate_email(email) and my_valid_email(email): 
+                code = ''
+                for i in range(6):
+                    x = str(randint(0,9))
+                    code += x
+                with conn:
+                    last_sent = conn.execute('SELECT last_email_send FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+                if last_sent != (None,) and int(time.time()) - last_sent[0] < 60*2:
+                    bot.send_message(user_id, 'Вы отправляете слишком много писем\nПожалуйста, напишите боту через 2 минуты (с момента отправки предыдущего кода)')
+                    user_states[user_id] = 'wait email'
+                else:
+                    bot.send_message(chat_id, 'Вам на почту отправлен шестизначный код\nОтправьте мне его, чтобы подтвердить почту\n\nЕсли код не пришел - обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                    with conn:
+                        conn.execute('UPDATE user_profiles SET last_email_send = ? WHERE user_id = ?', (int(time.time()), user_id,))
+                    send_verification_email(email, code, user_id)
+                    verif_codes[user_id] = code
+                    user_states[user_id] = f'wait code {email}'
+            else:
+                bot.send_message(chat_id, 'Вы ввели некорректную почту. Введите почту в формате ivanov.i.i@edu.mirea.ru\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                user_states[user_id] = 'wait email'
+        elif user_id in user_states and user_states[user_id].startswith('wait code'):
+            code = message.text
+            if code == verif_codes[user_id]:
+                email = user_states[user_id].split()[2]
+                with conn:
+                    conn.execute('UPDATE user_profiles SET email = ? WHERE user_id = ?', (email, user_id,))
+                bot.send_message(message.chat.id, "Почта подтверждена!\nПриятных знакомств 😉\n\nЧтобы создать анкету, пропишите /create_profile",reply_markup=start_menu)
+                user_states[user_id] = ''
+            else:
+                bot.send_message(chat_id, f'Вы ввели неправильный код!\n\nОбычно код переадресовывается на вашу личную почту (mail.ru, gmail, итд), привязанную к личному кабинету МИРЭА. Обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                user_states[user_id] = 'wait email'
+        if (is_profile_verified(user_id)):
+            if user_id in user_states and user_states[user_id].startswith('wait message'):
+                evaluator_username = message.from_user.username
+                match_id = user_states[user_id].split()[2]
+                user_states[user_id] = ''
+                with conn:
+                    user_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+                    user_gender = user_gender[0]
+                    match_gender = conn.execute('SELECT gender FROM user_profiles WHERE user_id = ?', (match_id,)).fetchone()
+                    match_gender = match_gender[0]
+                if message.text == "0":
+                    user_states[user_id] = ''
+                    remove_match(user_id, match_id)
+                    find_matc(user_id, chat_id)
+                else:
+                    if (user_gender == 1 and match_gender == 2):
+                        with conn:
+                            balance = conn.execute('SELECT balance FROM user_profiles WHERE user_id = ?', (user_id,)).fetchone()
+                        balance = int(balance[0])
+                        if balance >= 50:
+                            bot.send_message(chat_id,f'Отправили лайк с сообщением!\nБаланс: {balance - 50}', reply_markup=dating_menu)
+                            with conn:
+                                conn.execute('''UPDATE user_profiles SET balance = balance - 50 WHERE user_id = ?''', (user_id,))
+                            give_like(chat_id, user_id, match_id, message.from_user.username, (user_gender == 2 and match_gender == 1), True, message.text)
+                        else:
+                            bot.send_message(chat_id, "Стоп! Недостаточно средств на балансе!\n\nНаш сервис разработан так, чтобы каждый лайк был осознанным и значимым. Мы уверены, что серьезные отношения начинаются с ответственности и четкого выбора. Платные лайки помогают вам более внимательно подходить к выбору партнерш, создавая условия для того, чтобы каждый шаг был продуманным и целенаправленным.\n\nПополните баланс и продолжайте знакомиться с теми, кто действительно вам интересен!\n\nЦена одного лайка - 50 рублей, казалось бы - совсем немного, но готовы ли вы тратить 50 рублей на каждую анкету?...\n\n👉Пополнить баланс можно по команде /pay", reply_markup=start_menu)
+                            remove_match(user_id, match_id)
+                    else:
+                        give_like(chat_id, user_id, match_id, message.from_user.username, (user_gender == 2 and match_gender == 1), True, message.text)
+            else:
+                if message.text == 'Знакомства ❤️':
+                    bot.send_message(chat_id, f"Вы в меню [Знакомств](https://t.me/sparkleRTU/17)", reply_markup=dating_menu, parse_mode='Markdown')
+                elif message.text == 'Баттл Фото 🔥':
+                    check_for_completed_battles()
+                    bot.send_message(chat_id,f'Вы в меню [Фото-Баттлов](https://t.me/sparkleRTU/18)',reply_markup=battle_menu, parse_mode='Markdown')
+                elif message.text == 'Назад':
+                    bot.send_message(chat_id, f"Вы в главном меню\nВыберите раздел", reply_markup=start_menu)
+                elif message.text == 'Моя Анкета':
+                    flag = is_profile_exists(message)
+                    if flag:
+                        with conn:
+                            result = conn.execute('''
+                                SELECT name, photo, gender, bio, age, amount_of_wins, amount_of_pars, city, balance
+                                FROM user_profiles 
+                                WHERE user_id = ?
+                                ''', (user_id,)).fetchone()
+                        name, photo_data, gender, bio, age, am_wins, am_pars, city, balance = result
+                        if photo_data:
+                            bot.send_photo(message.chat.id, photo_data, caption = f'{name}, {age}, {city} - {bio}\n\nВаша статистика в Баттлах: {am_wins} побед из {am_pars} Баттлов\n\nВаш балланс: {balance} (Видно только вам)\n\nЧтобы пересоздать анкету, используйте команду /create_profile')
+                elif message.text == 'Смотреть анкеты':
+                    flag = is_profile_exists(message)
+                    if flag:
+                        find_matc(user_id,chat_id)
+                elif message.text == 'К Анкете':
+                    bot.send_message(chat_id, f'Вы в меню [Знакомств!](https://t.me/sparkleRTU/17)',reply_markup=dating_menu, parse_mode='Markdown')
+                #тут для батла фоток
+                elif message.text == 'Мой Профиль':
+                    flag = is_profile_exists(message)
+                    if flag:
+                        with conn:
+                            result = conn.execute('''
+                                SELECT name, photo, gender, age, amount_of_wins, amount_of_pars, city, balance
+                                FROM user_profiles 
+                                WHERE user_id = ?
+                                ''', (user_id,)).fetchone()
+                        name, photo_data, gender, age, am_wins, am_pars, city, balance = result
+                        if photo_data:
+                            bot.send_photo(message.chat.id, photo_data, caption = f'{name}, {age}, {city}\n\nВаша статистика в Баттлах: {am_wins} побед из {am_pars} Баттлов\n\nВаш баланс: {balance} (Видно только вам)\n\nЧтобы пересоздать анкету, используйте команду /create_profile')
+                elif message.text == 'Активные Баттлы':
+                    flag = is_profile_exists(message)
+                    if flag:
+                        show_next_battle(chat_id,user_id)
+                elif message.text == 'Принять Участие':
+                    join_battle(message)
+                elif message.text == 'Топ 5 участников':
+                    top_5_participants(message)
+                elif message.text == 'Закрыть':
+                    if user_id in payloads_ids:
+                        bot.delete_message(chat_id, payloads_ids[user_id])
+                        payloads_ids.pop(user_id, None)
+                        bot.send_message(chat_id, "Неоплаченные платежи закрыты, можете создать новый\nКоманда /pay",reply_markup=start_menu)
+                    else:
+                        bot.send_message(chat_id, f'У вас нет активных неоплаченных платежей', reply_markup=start_menu)
+                elif message.text == 'Я оплачу открытый счет':
+                    bot.send_message(chat_id, f'Хорошо, ожидаем оплаты', reply_markup=start_menu, reply_to_message_id=payloads_ids[user_id])    
+                elif message.text == 'Мои Баттлы':
+                    clear_evaluations_if_needed()
+                    if is_profile_exists(message):
+                        my_battles(message)
+                elif message.text == 'Настройки ⚙️':
+                    bot.send_message(chat_id, "Вы в меню настроек. Выберите нужную опцию", reply_markup=markup_settings)
+                elif message.text == "Изменить анкету":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Выберите, что хотите изменить в своей анкете\n\nЧтобы пересоздать анкету, используйте команду /create_profile", reply_markup=markup_change_anket)
+                elif message.text == "Изменить имя":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Напишите новое имя",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_name, 1)
+                elif message.text == "Изменить город":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Напишите новый город",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_city, 1)
+                elif message.text == "Изменить возраст":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Напишите ваш возраст",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_age, 1)
+                elif message.text == "Изменить предпочтения по возрасту":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Напишите ваш возраст",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_pref_age, 1)
+                elif message.text == "Изменить пол":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Выберите ваш пол",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_gender, 1)
+                elif message.text == "Изменить фото":
+                    if is_profile_exists(message):
+                        bot.send_message(chat_id, "Отправьте новое фото",reply_markup=types.ReplyKeyboardRemove())
+                        bot.register_next_step_handler(message, get_photo, 1)
+                elif message.text == "Реферальная система":
+                    bot.send_message(user_id, f'Вы в меню реферальной системы', reply_markup = markup_referals)
+                elif message.text == "🔗Реферальная ссылка":
+                    referral_link = f"https://t.me/twinkl_datebot?start={user_id}"
+                    bot.send_message(user_id, f"Ваша реферальная ссылка: {referral_link}", reply_markup=markup_referals)
+                elif message.text == "🔢Количество рефералов":
+                        all_amount = conn.execute("SELECT COUNT(*) FROM referrals WHERE user_id = ?", (user_id,))
+                        all_amount = all_amount.fetchone()[0]
+                        avaliable_amount = conn.execute("SELECT referral_count FROM referral_rewards WHERE user_id = ?", (user_id,)).fetchone()
+                        avaliable_amount = avaliable_amount[0] if avaliable_amount else 0
+                        bot.send_message(user_id, f"Всего рефералов: {all_amount}\nИз них доступно для обмена на награды: {avaliable_amount} ", reply_markup=markup_referals)
+                elif message.text == "Пополнить баланс":
+                    bot.send_message(chat_id, f'Чтобы пополнить баланс, воспользуйтесь командой /pay')
+                elif message.text == "🏆Мои награды":
+                    cursor = conn.execute("SELECT referral_count FROM referral_rewards WHERE user_id = ?", (user_id,))
+                    row = cursor.fetchone()
+                    referral_count = row[0] if row else 0
+                    # Создаем меню наград
+                    rewards_menu = types.InlineKeyboardMarkup()
+                    rewards_text = f"У вас {referral_count} рефералов.\nДоступные награды:\n"
+                    rewards_menu.add(types.InlineKeyboardButton("♥️Бесплатный лайк = 3 реф.", callback_data="reward_like"))
+                    rewards_menu.add(types.InlineKeyboardButton("💸Получить 300₽ = 100 реф.", callback_data="reward_cash"))
+                    rewards_menu.add(types.InlineKeyboardButton("➕Пригласить ещё", callback_data="invite_more"))
+                    bot.send_message(user_id, rewards_text, reply_markup=rewards_menu)
+                else:
+                    if not(user_id in verif_codes and message.text == verif_codes[user_id]):
+                        if user_id != 671084247 and user_id != 7515729537:
+                            bot.send_message(chat_id, f'Неизвестная комманда.',reply_markup=start_menu)
+                        else:
+                            txt = message.text
+                            if txt.startswith('ban '):
+                                id_ban = txt.split()[1]
+                                with conn:
+                                    conn.execute('UPDATE user_profiles SET status_ban = ?, photo = ? WHERE user_id = ?', ('banned', None, id_ban))
+                                bot.send_message(id_ban, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+                                bot.send_message(user_id, 'забанили')
+                            elif txt.startswith('unban '):
+                                id_ban = txt.split()[1]
+                                with conn:
+                                    conn.execute('UPDATE user_profiles SET status_ban = ? WHERE user_id = ?', ('norm', id_ban),)
+                                bot.send_message(id_ban, f'Вы были разбанены. Впредь не нарушайте правила бота.')
+                                bot.send_message(user_id,'разбанили')
+                            elif txt.startswith('verif '):
+                                id_verif, email_verif = txt.split()[1], txt.split()[2]
+                                with conn:
+                                    conn.execute('UPDATE user_profiles SET email = ? WHERE user_id = ?', (email_verif, id_verif),)
+                                bot.send_message(user_id, 'верифицировали')
+                                bot.send_message(id_verif, 'Теперь ваш аккаунт подтвержден! Хорошего пользования!',reply_markup=start_menu)
+                                user_states[id_verif] = ''
+                            elif txt == 'бд':
+                                try:
+                                    with open('usersDating.db', 'rb') as file:
+                                        bot.send_document(user_id, file)
+                                except Exception as e:
+                                    bot.reply_to(message, f"Произошла ошибка при отправке файла: {e}")
+                            elif txt.startswith('пополнить'):
+                                id_popln = txt.split()[1]
+                                am = txt.split()[2]
+                                update_balance(id_popln, am)
+                            else:
+                                bot.send_message(chat_id, f'Неизвестная комманда.',reply_markup=start_menu)
+                                
+        else:
+            if not(user_id in user_states and user_states[user_id].startswith('wait code')) and not(user_id in user_states and user_states[user_id] == 'wait email'):
+                    bot.send_message(chat_id, 'Сначала нужно подтвердить почту. Это можно сделать с помощью команды /verify')
+bot.polling(none_stop=True)
