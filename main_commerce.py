@@ -5,8 +5,10 @@ import sqlite3
 from datetime import datetime
 import time
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderUnavailable, GeocoderTimedOut
 from validate_email import validate_email #pip install py3dns (?)
 from email_check_and_send import my_valid_email, send_verification_email
+import re
 
 geolocator = Nominatim(user_agent="city_validator") #city validator
 
@@ -234,6 +236,9 @@ def is_profile_verified(user_id):
         return True
     else:
         return False
+
+def is_russian_city_name(city_name):
+    return bool(re.fullmatch(r"[А-Яа-яЁё0-9\s-]+", city_name))
         
 #При поиске анкеты учитывается ласт онлайн в боте. При нажатии любой кнопки пользователем, запускается эта функция, обновляя его ласт онлайн в боте.
 def update_last_online(message):
@@ -427,44 +432,54 @@ def get_pref_age(message, is_edit):
         bot.send_message(chat_id, f'Введите 2 числа через пробел')
         bot.register_next_step_handler(message, get_pref_age, is_edit)
 
+# Нормализация города через Geopy
 def normalize_city_to_russian(city_name):
     geolocator2 = Nominatim(user_agent="city_normalizer")
-    location = geolocator2.geocode(city_name, language="ru")  # Приведение к русскому языку
-    if location:
-        city = location.address.split(",")[0]  # Берем только первую часть названия
-        # Удаляем префиксы вроде "городской округ"
-        if city.startswith("городской округ "):
-            city = city.replace("городской округ ", "", 1)
-        return city.strip()
+    try:
+        location = geolocator2.geocode(city_name, language="ru")
+        if location:
+            city = location.address.split(",")[0]
+            if city.startswith("городской округ "):
+                city = city.replace("городской округ ", "", 1)
+            return city.strip()
+    except (GeocoderUnavailable, GeocoderTimedOut):
+        pass
     return None
 
+# Обработка ввода города
 def get_city(message, is_edit):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if message.content_type == 'text':
-        text = message.text
+        text = message.text.strip()
         loc = normalize_city_to_russian(text)
         if loc:
-            text = text.title()
-            with conn:
-                        conn.execute('''
+            city_to_save = loc.title()
+        else:
+            if is_russian_city_name(text):
+                city_to_save = text.title()
+            else:
+                bot.send_message(chat_id, f"Название города должно быть написано на русском языке. Попробуйте еще раз.")
+                bot.register_next_step_handler(message, get_city, is_edit)
+                return
+
+        # Сохраняем город в БД
+        with conn:
+            conn.execute('''
                 UPDATE user_profiles
                 SET city = ?
                 WHERE user_id = ?
-            ''', (loc, user_id))
-            if is_edit:
-                bot.send_message(chat_id, f'Город успешно изменен!', reply_markup=start_menu)
-            else:
-                bot.send_message(chat_id, f'Отлично! Осталось прикрепить фото')
-                bot.register_next_step_handler(message, get_photo, is_edit)
+            ''', (city_to_save, user_id))
+
+        if is_edit:
+            bot.send_message(chat_id, f'Город успешно изменен!', reply_markup=start_menu)
         else:
-            bot.send_message(chat_id, f'Вы ввели город, неизвестный нам\nПопробуйте ввести название другого ближайшего к вам города или населенного пункта')
-            bot.register_next_step_handler(message, get_city, is_edit)
-            return 
+            bot.send_message(chat_id, f'Отлично! Осталось прикрепить фото')
+            bot.register_next_step_handler(message, get_photo, is_edit)
     else:
-        bot.send_message(chat_id, f'Введите название города текстом')
+        bot.send_message(chat_id, f'Введите название города текстом.')
         bot.register_next_step_handler(message, get_city, is_edit)
-        return 
+
 
 def get_photo(message, is_edit):
     chat_id = message.chat.id
@@ -1330,7 +1345,7 @@ def answer(message):
                     verif_codes[user_id] = code
                     user_states[user_id] = f'wait code {email}'
             else:
-                bot.send_message(chat_id, 'Вы ввели некорректную почту. Введите почту в формате ivanov.i.i@edu.mirea.ru\n\nЕсли что-то не получается, поддержка 24/7 - @help_username_bot')
+                bot.send_message(chat_id, 'Вы ввели некорректную почту. Введите вашу настояющую электронную почту, без точек и пробелов\n\nЕсли что-то не получается, поддержка 24/7 - @help_username_bot')
                 user_states[user_id] = 'wait email'
         elif user_id in user_states and user_states[user_id].startswith('wait code'):
             code = message.text
@@ -1451,11 +1466,11 @@ def answer(message):
                         bot.register_next_step_handler(message, get_age, 1)
                 elif message.text == "Изменить предпочтения по возрасту":
                     if is_profile_exists(message):
-                        bot.send_message(chat_id, "Напишите ваш возраст",reply_markup=types.ReplyKeyboardRemove())
+                        bot.send_message(chat_id, "Напишите 2 числа через пробел: минимальный и максимальный возраст соответсвенно\n\n<i>Пример: 20 30\nОзначает, что вы ищите людей возрастом от 20 до 30 лет включительно</i>'",parse_mode="HTML",reply_markup=types.ReplyKeyboardRemove())
                         bot.register_next_step_handler(message, get_pref_age, 1)
                 elif message.text == "Изменить пол":
                     if is_profile_exists(message):
-                        bot.send_message(chat_id, "Выберите ваш пол",reply_markup=types.ReplyKeyboardRemove())
+                        bot.send_message(chat_id, "Выберите ваш пол",reply_markup=genders)
                         bot.register_next_step_handler(message, get_gender, 1)
                 elif message.text == "Изменить фото":
                     if is_profile_exists(message):
