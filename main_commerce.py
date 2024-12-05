@@ -4,8 +4,6 @@ from telebot import types
 import sqlite3
 from datetime import datetime
 import time
-import smtplib
-from email.mime.text import MIMEText
 from geopy.geocoders import Nominatim
 from validate_email import validate_email #pip install py3dns (?)
 from email_check_and_send import my_valid_email, send_verification_email
@@ -180,12 +178,12 @@ but_referals = types.KeyboardButton('🔗Реферальная ссылка')
 markup_referals.add(but_referals, "🏆Мои награды", "🔢Количество рефералов", but_back)
 
 #define bot
-bot = telebot.TeleBot('API KEY')
+bot = telebot.TeleBot('7686184399:AAE05Ll7kwOtIP9SmbNwhiSL4jh0zD-UB9E')
 
 #define token for pay
-TELEGRAM_PROVIDER_TOKEN = "PAY TOKEN"
+TELEGRAM_PROVIDER_TOKEN = "390540012:LIVE:60900"
 
-ADMIN_CHAT_ID = 'ID' #Катя доп аккаунт
+ADMIN_CHAT_ID = 6670128924 #Катя доп аккаунт
 
 #временные словари для разных функций
 user_states = {} #в основном используется для заполнения анкеты. user_states[user_id] = 'wait bio' => следующее сообщение, которое отправит пользоавтель, будет описанием его анкеты
@@ -932,7 +930,6 @@ def clean_up_votes(battle_id):
 
 import json
 import telebot
-from telebot import types
 
 # Функция для обновления баланса в базе данных
 def update_balance(user_id, amount):
@@ -1079,7 +1076,7 @@ def send(call):
 @bot.callback_query_handler(func=lambda call: call.data == 'ready')
 def send2(call):
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-    bot.send_message(call.message.chat.id, 'Для начала тебе нужно подтвердить свою почту\nЧтобы это сделать, пропиши команду /verify\n\nПоддержка 24/7 - @sparkle_help')
+    bot.send_message(call.message.chat.id, 'Для начала тебе нужно подтвердить свою почту\nЧтобы это сделать, пропиши команду /verify\n\nПоддержка 24/7 - @help_username_bot')
 
 #команда verify - подтверждение по почте 
 @bot.message_handler(commands=['verify'])
@@ -1087,7 +1084,7 @@ def verif(message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         if is_profile_verified(user_id):
             bot.send_message(chat_id,'Ваш профиль уже подтвержден', reply_markup=start_menu)
@@ -1101,7 +1098,7 @@ def make_profile(message):
     chat_id = message.chat.id
     user_id = message.from_user.id
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         if is_profile_verified(user_id):
             with conn:
@@ -1133,7 +1130,7 @@ def handle_vote_or_exit(call):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         if is_profile_verified(user_id):
             bot.delete_message(chat_id, call.message.message_id)
@@ -1167,7 +1164,7 @@ def handle_evaluation(call):
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         if is_profile_verified(user_id):
             bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
@@ -1299,7 +1296,7 @@ def handle_photo(message):
     user_id = message.from_user.id
     chat_id = message.chat.id
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         bot.send_message(chat_id, f'Зачем вы отправили фото?',reply_markup=start_menu)
             
@@ -1311,7 +1308,7 @@ def answer(message):
     is_profile_verified(user_id)
     update_last_online(message)
     if get_status(user_id) == 'banned':
-        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+        bot.send_message(user_id, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
     else:
         if user_id in user_states and user_states[user_id] == 'wait email':
             email = message.text
@@ -1326,14 +1323,14 @@ def answer(message):
                     bot.send_message(user_id, 'Вы отправляете слишком много писем\nПожалуйста, напишите боту через 2 минуты (с момента отправки предыдущего кода)')
                     user_states[user_id] = 'wait email'
                 else:
-                    bot.send_message(chat_id, 'Вам на почту отправлен шестизначный код\nОтправьте мне его, чтобы подтвердить почту\n\nЕсли код не пришел - обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                    bot.send_message(chat_id, 'Вам на почту отправлен шестизначный код\nОтправьте мне его, чтобы подтвердить почту\n\nЕсли код не пришел - обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @help_username_bot')
                     with conn:
                         conn.execute('UPDATE user_profiles SET last_email_send = ? WHERE user_id = ?', (int(time.time()), user_id,))
                     send_verification_email(email, code, user_id)
                     verif_codes[user_id] = code
                     user_states[user_id] = f'wait code {email}'
             else:
-                bot.send_message(chat_id, 'Вы ввели некорректную почту. Введите почту в формате ivanov.i.i@edu.mirea.ru\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                bot.send_message(chat_id, 'Вы ввели некорректную почту. Введите почту в формате ivanov.i.i@edu.mirea.ru\n\nЕсли что-то не получается, поддержка 24/7 - @help_username_bot')
                 user_states[user_id] = 'wait email'
         elif user_id in user_states and user_states[user_id].startswith('wait code'):
             code = message.text
@@ -1344,7 +1341,7 @@ def answer(message):
                 bot.send_message(message.chat.id, "Почта подтверждена!\nПриятных знакомств 😉\n\nЧтобы создать анкету, пропишите /create_profile",reply_markup=start_menu)
                 user_states[user_id] = ''
             else:
-                bot.send_message(chat_id, f'Вы ввели неправильный код!\n\nОбычно код переадресовывается на вашу личную почту (mail.ru, gmail, итд), привязанную к личному кабинету МИРЭА. Обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @sparkle_help')
+                bot.send_message(chat_id, f'Вы ввели неправильный код!\n\nОбычно код переадресовывается на вашу личную почту (mail.ru, gmail, итд), привязанную к личному кабинету МИРЭА. Обязательно проверьте папку "Спам"!\n\nЕсли что-то не получается, поддержка 24/7 - @help_username_bot')
                 user_states[user_id] = 'wait email'
         if (is_profile_verified(user_id)):
             if user_id in user_states and user_states[user_id].startswith('wait message'):
@@ -1377,10 +1374,10 @@ def answer(message):
                         give_like(chat_id, user_id, match_id, message.from_user.username, (user_gender == 2 and match_gender == 1), True, message.text)
             else:
                 if message.text == 'Знакомства ❤️':
-                    bot.send_message(chat_id, f"Вы в меню [Знакомств](https://t.me/sparkleRTU/17)", reply_markup=dating_menu, parse_mode='Markdown')
+                    bot.send_message(chat_id, f"Вы в меню Знакомств", reply_markup=dating_menu)
                 elif message.text == 'Баттл Фото 🔥':
                     check_for_completed_battles()
-                    bot.send_message(chat_id,f'Вы в меню [Фото-Баттлов](https://t.me/sparkleRTU/18)',reply_markup=battle_menu, parse_mode='Markdown')
+                    bot.send_message(chat_id,f'Вы в меню Фото-Баттлов',reply_markup=battle_menu)
                 elif message.text == 'Назад':
                     bot.send_message(chat_id, f"Вы в главном меню\nВыберите раздел", reply_markup=start_menu)
                 elif message.text == 'Моя Анкета':
@@ -1400,7 +1397,7 @@ def answer(message):
                     if flag:
                         find_matc(user_id,chat_id)
                 elif message.text == 'К Анкете':
-                    bot.send_message(chat_id, f'Вы в меню [Знакомств!](https://t.me/sparkleRTU/17)',reply_markup=dating_menu, parse_mode='Markdown')
+                    bot.send_message(chat_id, f'Вы в меню Знакомств!',reply_markup=dating_menu)
                 #тут для батла фоток
                 elif message.text == 'Мой Профиль':
                     flag = is_profile_exists(message)
@@ -1498,7 +1495,7 @@ def answer(message):
                                 id_ban = txt.split()[1]
                                 with conn:
                                     conn.execute('UPDATE user_profiles SET status_ban = ?, photo = ? WHERE user_id = ?', ('banned', None, id_ban))
-                                bot.send_message(id_ban, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @sparkle_help')
+                                bot.send_message(id_ban, f'Вы были забанены. Чтобы обжаловать блокировку или купить разбан пишите @help_username_bot')
                                 bot.send_message(user_id, 'забанили')
                             elif txt.startswith('unban '):
                                 id_ban = txt.split()[1]
