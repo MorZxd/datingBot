@@ -1,5 +1,7 @@
 Видеоотчет + Тесты: https://drive.google.com/file/d/1e-h4BuT2CqT_FKdX1RvXJDItjvBRZ3Uu/view?usp=sharing
 
+Отчет: https://disk.yandex.ru/i/pdVKdQj9jE3UHA
+
 Полная версия: https://telegra.ph/Annotaciya-proekta-10-24
 
 # Аннотация проекта
